@@ -1,6 +1,11 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using TreeViewTest.Models.Instruments;
 
 namespace TreeViewTest.Controls
@@ -21,7 +26,6 @@ namespace TreeViewTest.Controls
         // Using a DependencyProperty as the backing store for Instruments.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty InstrumentsProperty =
             DependencyProperty.Register("Instruments", typeof(ObservableCollection<IInstrumentItem>), typeof(InstrumentsTreeControl), new PropertyMetadata(null));
-
 
     }
 }

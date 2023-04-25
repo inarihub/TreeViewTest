@@ -6,11 +6,11 @@
         public string Code { get; set; }
         public int HitCount { get; set; }
 
-        public Instrument(string name)
+        public Instrument(string name, int hitCount = 0)
         {
             Name = name;
             Code = name + "#code";
-            HitCount = 0;
+            HitCount = hitCount;
         }
     }
 }

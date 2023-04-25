@@ -7,8 +7,9 @@
         xmlns:local="clr-namespace:TreeViewTest"
         mc:Ignorable="d"
         DataContext="{Binding RelativeSource={RelativeSource self}}"
-        Title="MainWindow" Height="400" Width="300">
+        Title="MainWindow" Height="700" Width="500">
     <Grid Margin="10">
-        <uc:InstrumentsTreeControl Instruments="{Binding InstrumentItems}"/>
+        <Label Content="Test"/>
+        <uc:InstrumentsTreeControl Width="400" Height="600" Instruments="{Binding InstrumentItems}"/>
     </Grid>
 </Window>

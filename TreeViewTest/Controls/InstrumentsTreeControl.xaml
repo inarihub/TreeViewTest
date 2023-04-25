@@ -7,12 +7,15 @@
              xmlns:local="clr-namespace:TreeViewTest.Controls"
              mc:Ignorable="d">
     <Grid>
-        <TreeView x:Name="instrumentsTree" Height="200" Width="200"
+        <TreeView x:Name="instrumentsTree"
+                  Width="{Binding RelativeSource={RelativeSource AncestorType=local:InstrumentsTreeControl, Mode=FindAncestor}, Path=Width}"
+                  Height="{Binding RelativeSource={RelativeSource AncestorType=local:InstrumentsTreeControl, Mode=FindAncestor}, Path=Height}"
                   VirtualizingStackPanel.IsVirtualizing="True"
                   VirtualizingStackPanel.VirtualizationMode="Recycling"
                   ItemsSource="{Binding ElementName=instrumentsControl, Path=Instruments}">
             <TreeView.Resources>
-                <HierarchicalDataTemplate DataType="{x:Type mod:InstrumentGroup}" ItemsSource="{Binding Items}">
+                <HierarchicalDataTemplate DataType="{x:Type mod:InstrumentGroup}"
+                                          ItemsSource="{Binding Items}">
                     <TextBlock Text="{Binding Name}"/>
                 </HierarchicalDataTemplate>
                 <DataTemplate DataType="{x:Type mod:Instrument}">

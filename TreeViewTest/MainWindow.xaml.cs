@@ -37,10 +37,16 @@ namespace TreeViewTest
 
         private void PopulateGroup(InstrumentGroup group, int amount)
         {
+            var subGroup = new InstrumentGroup("subgroup");
+            group.Items.Add(subGroup);
+
             for (int i = 0; i < amount; i++)
             {
-                group.Items.Add(new Instrument("item #" + i));
-            }           
+                subGroup.Items.Add(new Instrument("item #" + i));
+            }
+
+            group.Items.Add(new Instrument("inner visible item"));
+            group.Items.Add(new Instrument("inner invisible item", -1));
         }
     }
 }
