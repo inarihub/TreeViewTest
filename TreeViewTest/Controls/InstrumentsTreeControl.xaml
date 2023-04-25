@@ -1,0 +1,24 @@
+﻿<UserControl x:Name="instrumentsControl" x:Class="TreeViewTest.Controls.InstrumentsTreeControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mod="clr-namespace:TreeViewTest.Models.Instruments"
+             xmlns:local="clr-namespace:TreeViewTest.Controls"
+             mc:Ignorable="d">
+    <Grid>
+        <TreeView x:Name="instrumentsTree" Height="200" Width="200"
+                  VirtualizingStackPanel.IsVirtualizing="True"
+                  VirtualizingStackPanel.VirtualizationMode="Recycling"
+                  ItemsSource="{Binding ElementName=instrumentsControl, Path=Instruments}">
+            <TreeView.Resources>
+                <HierarchicalDataTemplate DataType="{x:Type mod:InstrumentGroup}" ItemsSource="{Binding Items}">
+                    <TextBlock Text="{Binding Name}"/>
+                </HierarchicalDataTemplate>
+                <DataTemplate DataType="{x:Type mod:Instrument}">
+                    <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+            </TreeView.Resources>
+        </TreeView>
+    </Grid>
+</UserControl>
