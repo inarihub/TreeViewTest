@@ -19,20 +19,21 @@
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type mod:InstrumentNode}" 
                                           ItemsSource="{Binding Items}">
-                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    <local:InstrumentsCheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                               Command="{Binding Source={StaticResource ItemViewModel}, Path=CheckBranchCommand}"
-                              CommandParameter="{Binding RelativeSource={RelativeSource self}}">
-                        <CheckBox.Content>
+                              CommandParameter="{Binding RelativeSource={RelativeSource self}}"
+                                      PartialToChecked="True">
+                        <local:InstrumentsCheckBox.Content>
                             <TextBlock>
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="{}{0}{1}">
                                         <Binding Path="Name"/>
-                                        <Binding Path="HitCount" Converter="{StaticResource HitCountParser}"/>
+                                        <Binding Path="Hits" Converter="{StaticResource HitCountParser}"/>
                                     </MultiBinding>
                                 </TextBlock.Text>
                             </TextBlock>
-                        </CheckBox.Content>
-                    </CheckBox>
+                        </local:InstrumentsCheckBox.Content>
+                    </local:InstrumentsCheckBox>
                 </HierarchicalDataTemplate>
             </TreeView.Resources>
         </TreeView>
