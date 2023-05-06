@@ -15,7 +15,7 @@
         <TreeView x:Name="instrumentsTree"
                   VirtualizingStackPanel.IsVirtualizing="True"
                   VirtualizingStackPanel.VirtualizationMode="Recycling"
-                  ItemsSource="{Binding ElementName=instrumentsControl, Path=Instruments}">
+                  ItemsSource="{Binding ElementName=instrumentsControl, Path=InstrumentsRoot.Items}">
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type mod:InstrumentNode}" 
                                           ItemsSource="{Binding Items}">

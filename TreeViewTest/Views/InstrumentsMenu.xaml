@@ -30,7 +30,7 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
         <uc:InstrumentsTreeControl x:Name="treeView" Margin="10"
-                                   Instruments="{Binding InstrumentsCollection, UpdateSourceTrigger=PropertyChanged}"/>
+                                   InstrumentsRoot="{Binding InstrumentsRootNode, UpdateSourceTrigger=PropertyChanged}"/>
         <StackPanel Orientation="Horizontal" Grid.Row="1"
                     HorizontalAlignment="Right">
             <Button Content="Select all" Command="{Binding SelectAllCommand}"/>

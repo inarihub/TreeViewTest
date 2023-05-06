@@ -1,8 +1,7 @@
-﻿namespace TreeViewTest.Models.Instruments
+﻿namespace TreeViewTest.Models.Instruments;
+
+public interface IInstrument
 {
-    public interface IInstrument
-    {
-        public string Name { get; init; }
-        public int Hits { get; set; }
-    }
+    public string Name { get; init; }
+    public int Hits { get; set; }
 }

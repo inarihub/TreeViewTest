@@ -13,7 +13,14 @@ public partial class InstrumentsMenuViewModel : DependencyObject
     public IRelayCommand SelectAllCommand { get; set; }
     public IRelayCommand UnselectAllCommand { get; set; }
 
-    public List<InstrumentNode> InstrumentsCollection { get; set; }
+    public InstrumentNode InstrumentsRootNode
+    {
+        get { return (InstrumentNode)GetValue(InstrumentsRootNodeProperty); }
+        set { SetValue(InstrumentsRootNodeProperty, value); }
+    }
+
+    public static readonly DependencyProperty InstrumentsRootNodeProperty =
+        DependencyProperty.Register("InstrumentsRootNode", typeof(InstrumentNode), typeof(InstrumentsMenuViewModel), new PropertyMetadata(null));
 
     public List<string> SelectedCodes
     {
@@ -27,7 +34,6 @@ public partial class InstrumentsMenuViewModel : DependencyObject
 
     public InstrumentsMenuViewModel()
     {
-        InstrumentsCollection = new();
         InitializeTreeCollection();
         GetCodesCommand = new RelayCommand(GetCodes);
         SelectAllCommand = new RelayCommand(SelectAll);
@@ -37,7 +43,7 @@ public partial class InstrumentsMenuViewModel : DependencyObject
     private async void InitializeTreeCollection()
     {
         Uri uri = new("/filters.txt", UriKind.Relative);
-        await InstrumentNodeBuilder.PopulateFromFile(uri, InstrumentsCollection);
+        InstrumentsRootNode = await InstrumentNodeBuilder.PopulateFromFile(uri) ?? throw new Exception();
     }
 
     private async void GetCodes()
@@ -48,22 +54,21 @@ public partial class InstrumentsMenuViewModel : DependencyObject
     private Task<List<string>> GetSelected()
     {
         List<string> list = new();
-        var res = FindSelected(InstrumentsCollection, list);
+        var res = FindSelected(InstrumentsRootNode, list);
 
         return Task.FromResult(res);
     }
 
-    private List<string> FindSelected(List<InstrumentNode> instruments, List<string> keys)
+    private List<string> FindSelected(InstrumentNode instrumentsRoot, List<string> keys)
     {
-        foreach (var instrument in instruments)
+        foreach (var instrument in instrumentsRoot.Items)
         {
-            if (instrument.IsSelected is null || instrument.IsSelected.Value is true)
+            if (instrument.IsSelected is null)
             {
-                if (instrument.Items.Count > 0)
-                {
-                    FindSelected(instrument.Items, keys);
-                }
-
+                FindSelected(instrument, keys);
+            }
+            else if (instrument.IsSelected.Value && instrument.Items.Count == 0)
+            {
                 keys.Add(instrument.Key);
             }
         }
@@ -73,20 +78,22 @@ public partial class InstrumentsMenuViewModel : DependencyObject
 
     public void SelectAll()
     {
-        SetSelectedTo(true, InstrumentsCollection);
+        if (InstrumentsRootNode is null) return;
+        SetSelectedTo(true, InstrumentsRootNode);
     }
 
     public void UnselectAll()
     {
-        SetSelectedTo(false, InstrumentsCollection);
+        if (InstrumentsRootNode is null) return;
+        SetSelectedTo(false, InstrumentsRootNode);
     }
 
-    private void SetSelectedTo(bool selected, List<InstrumentNode> list)
+    private static void SetSelectedTo(bool selected, InstrumentNode list)
     {
-        foreach (var instrument in list)
+        foreach (var instrument in list.Items)
         {
             if (instrument.Items.Count > 0)
-                SetSelectedTo(selected, instrument.Items);
+                SetSelectedTo(selected, instrument);
 
             if (instrument.IsSelected is null || instrument.IsSelected.Value != selected)
                 instrument.IsSelected = selected;

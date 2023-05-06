@@ -1,110 +1,120 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace TreeViewTest.Models.Instruments
+namespace TreeViewTest.Models.Instruments;
+
+public class InstrumentNodeBuilder
 {
-    public class InstrumentNodeBuilder
+    const int INSTRUMENTNODE_PROP_COUNT = 6;
+
+    public async static Task<InstrumentNode?> PopulateFromFile(Uri uri)
     {
-        public async static Task PopulateFromFile(Uri uri, List<InstrumentNode> nodes)
-        {
-            using var stream = App.GetContentStream(uri).Stream;
-            using var reader = new StreamReader(stream);
-            string? line;
+        using var stream = App.GetContentStream(uri).Stream;
+        using var reader = new StreamReader(stream);
+        string? bufferString = await reader.ReadLineAsync();
+        InstrumentNode root = SetRoot(bufferString);
 
-            while ((line = await reader.ReadLineAsync()) is not null)
+        while ((bufferString = await reader.ReadLineAsync()) is not null)
+        {
+            if (ParseToInstrument(bufferString, out InstrumentNode? result))
             {
-                if (ParseToInstrument(line, out InstrumentNode? result))
-                {
-                    SetInstrumentNode(nodes, result!);
-                }
+                SetInstrumentNode(root, result!);
             }
         }
 
-        private static void SetInstrumentNode(List<InstrumentNode> nodes, InstrumentNode result)
-        {
-            var targetList = FindParent(nodes, result.Key, out InstrumentNode? parent);
+        return root;
+    }
 
-            result.Parent = parent;
-            targetList.Add(result);
-        }
+    private static InstrumentNode SetRoot(string? str)
+    {
+        ParseToInstrument(str, out InstrumentNode? result);
+        if (result is null || result.Level != 0) throw new Exception("");
 
-        private static List<InstrumentNode> FindParent(List<InstrumentNode> nodes, string key, out InstrumentNode? lastParentNode, int position = 0)
-        {
-            List<InstrumentNode> currentList = nodes;
-            lastParentNode = null;
-            position = key.IndexOf('.', position + 1);
+        return result;
+    }
 
-            if (!string.IsNullOrEmpty(key) && position != -1)
-            {
-                lastParentNode = currentList.Find(x => x.Key == key[..position]) ?? throw new Exception("Invalid key path");
-                currentList = FindParent(lastParentNode.Items, key, out InstrumentNode? nextParentNode, position);
+    private static void SetInstrumentNode(InstrumentNode rootNode, InstrumentNode result)
+    {
+        var parent = FindParent(rootNode, result.Key);
+        if (parent is null) return;
+        parent.HasChildren = true;
+        result.Parent = parent;
+        parent.Items.Add(result);
+    }
 
-                if (nextParentNode is not null)
-                    lastParentNode = nextParentNode;
-            }
+    private static InstrumentNode? FindParent(InstrumentNode node, string key)
+    {
+        var parentNode = node;
+        int position = key.IndexOf('.', node.Key.Length + 1);
 
-            return currentList;
-        }
+        if (position == -1) return parentNode;
 
-        private static bool ParseToInstrument(string result, out InstrumentNode? node)
-        {
-            node = default;
-            var regRes = GenerateMatchGroups(result);
+        var nextLevelNode = node.Items.Find(i => i.Key == key[..position]) ?? throw new Exception();
+        parentNode = FindParent(nextLevelNode, key);
 
-            if (regRes.Success)
-            {
-                string key = regRes.Groups["Key"].Value;
-                string levelStr = regRes.Groups["Level"].Value;
+        return parentNode;
+    }
 
-                if (!IsKeyValid(key) || !IsLevelValid(levelStr, out int level))
-                    return false;
+    private static bool ParseToInstrument(string? inputString, out InstrumentNode? node)
+    {
+        node = null;
+        if (inputString is null) return false;
 
-                string name = regRes.Groups["Name"].Value;
-                int hits = ParseHits(regRes.Groups["Hits"].Value); // default value is -1
+        var parseObj = inputString.Split('|');
+        if (parseObj is null || parseObj.Length != INSTRUMENTNODE_PROP_COUNT) return false;
 
-                string path = regRes.Groups["Path"].Value;
-                bool hasChildren = bool.Parse(regRes.Groups["HasChildren"].Value.ToLower());
+        string key = parseObj[0];
 
-                node = new()
-                {
-                    Key = key,
-                    Level = level,
-                    Name = name,
-                    Hits = hits,
-                    Path = path,
-                    HasChildren = hasChildren
-                };
-                return true;
-            }
-
+        if (!IsKeyValid(parseObj[0], out int levelCount) ||
+            !IsLevelValid(parseObj[1], out int level) || levelCount != level)
             return false;
-        }
 
-        private static Match GenerateMatchGroups(string nodeString)
+        string name = parseObj[2];
+        int hits = ParseHits(parseObj[3]);
+        string path = parseObj[4];
+
+        if (!bool.TryParse(parseObj[5], out bool hasChildren))
+            return false;
+
+        node = new()
         {
-            return Regex.Match(nodeString,
-                @"^(?<Key>.+(\.\d+)*)\|(?<Level>\d+)\|(?<Name>.+)\|(?<Hits>\d*)\|(?<Path>.*)\|(?<HasChildren>(\bTrue\b)|(\bFalse\b))\z");
-        }
+            Key = key,
+            Level = level,
+            Name = name,
+            Hits = hits,
+            Path = path,
+            HasChildren = hasChildren
+        };
 
-        private static bool IsKeyValid(string keyStr)
+        return true;
+    }
+
+    private static bool IsKeyValid(string keyStr, out int levelCount)
+    {
+        var levels = keyStr.Split('.');
+        levelCount = -1;
+
+        foreach (var level in levels)
         {
-            return Regex.IsMatch(keyStr, @"^\w+(\.\w+)*\z");
+            levelCount++;
+            if (level != string.Empty) continue;
+            else return false;
         }
 
-        private static bool IsLevelValid(string levelStr, out int levelValue)
-        {
-            return int.TryParse(levelStr, out levelValue);
-        }
+        return true;
+    }
 
-        private static int ParseHits(string strHits)
-        {
-            if (strHits == string.Empty || !int.TryParse(strHits, out int hits))
-                hits = -1;
+    private static bool IsLevelValid(string levelStr, out int levelValue)
+    {
+        return int.TryParse(levelStr, out levelValue);
+    }
 
-            return hits;
-        }
+    private static int ParseHits(string strHits)
+    {
+        if (strHits == string.Empty || !int.TryParse(strHits, out int hits))
+            hits = -1;
+
+        return hits;
     }
 }
