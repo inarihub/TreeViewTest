@@ -8,9 +8,8 @@ public class InstrumentNodeBuilder
 {
     const int INSTRUMENTNODE_PROP_COUNT = 6;
 
-    public async static Task<InstrumentNode?> PopulateFromFile(Uri uri)
+    public async static Task<InstrumentNode?> PopulateNodeAsync(Stream stream)
     {
-        using var stream = App.GetContentStream(uri).Stream;
         using var reader = new StreamReader(stream);
         string? bufferString = await reader.ReadLineAsync();
         InstrumentNode root = SetRoot(bufferString);
@@ -22,14 +21,13 @@ public class InstrumentNodeBuilder
                 SetInstrumentNode(root, result!);
             }
         }
-
         return root;
     }
 
     private static InstrumentNode SetRoot(string? str)
     {
         ParseToInstrument(str, out InstrumentNode? result);
-        if (result is null || result.Level != 0) throw new Exception("");
+        if (result is null || result.Level != 0) throw new Exception("Cannot parse to instrument");
 
         return result;
     }

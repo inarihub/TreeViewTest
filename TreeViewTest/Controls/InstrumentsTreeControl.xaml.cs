@@ -1,22 +1,30 @@
-﻿using System.Windows;
+﻿using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using TreeViewTest.Models.Instruments;
 
 namespace TreeViewTest.Controls;
 
 public partial class InstrumentsTreeControl : UserControl
 {
-    public InstrumentNode InstrumentsRoot
+    public List<InstrumentNode> CollectionNodeView
     {
-        get { return (InstrumentNode)GetValue(InstrumentsRootProperty); }
-        set { SetValue(InstrumentsRootProperty, value); }
+        get { return (List<InstrumentNode>)GetValue(CollectionNodeViewProperty); }
+        set { SetValue(CollectionNodeViewProperty, value); }
     }
 
-    public static readonly DependencyProperty InstrumentsRootProperty =
-        DependencyProperty.Register("InstrumentsRoot", typeof(InstrumentNode), typeof(InstrumentsTreeControl), new PropertyMetadata(null));
+    public static readonly DependencyProperty CollectionNodeViewProperty =
+        DependencyProperty.Register("CollectionNodeView", typeof(List<InstrumentNode>), typeof(InstrumentsTreeControl), new PropertyMetadata(null));
 
-    public InstrumentsTreeControl()
+    public InstrumentsTreeControl() 
     {
         InitializeComponent();
+        Binding binding = new("CollectionNodeView")
+        {
+            Source = this,
+            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+        };
+        BindingOperations.SetBinding(instrumentsTree, TreeView.ItemsSourceProperty, binding);
     }
 }

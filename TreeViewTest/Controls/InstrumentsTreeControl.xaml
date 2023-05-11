@@ -10,15 +10,17 @@
     <UserControl.Resources>
         <vm:InstrumentsTreeItemViewModel x:Key="ItemViewModel"/>
         <local:HitCountConverter x:Key="HitCountParser"/>
+        <DataTemplate x:Key="text">
+            <TextBlock Text="Initializing"/>
+        </DataTemplate>
     </UserControl.Resources>
     <Grid>
-        <TreeView x:Name="instrumentsTree"
+        <TreeView x:Name="instrumentsTree" IsTabStop="True"
                   VirtualizingStackPanel.IsVirtualizing="True"
-                  VirtualizingStackPanel.VirtualizationMode="Recycling"
-                  ItemsSource="{Binding ElementName=instrumentsControl, Path=InstrumentsRoot.Items}">
+                  VirtualizingStackPanel.VirtualizationMode="Recycling">
             <TreeView.Resources>
-                <HierarchicalDataTemplate DataType="{x:Type mod:InstrumentNode}" 
-                                          ItemsSource="{Binding Items}">
+                <HierarchicalDataTemplate DataType="{x:Type mod:InstrumentNode}"
+                                          ItemsSource="{Binding Items, UpdateSourceTrigger=PropertyChanged}">
                     <local:InstrumentsCheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                               Command="{Binding Source={StaticResource ItemViewModel}, Path=CheckBranchCommand}"
                               CommandParameter="{Binding RelativeSource={RelativeSource self}}"

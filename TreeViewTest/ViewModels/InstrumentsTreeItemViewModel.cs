@@ -31,8 +31,11 @@ public class InstrumentsTreeItemViewModel : DependencyObject
         {
             foreach (var item in node.Items)
             {
-                SetChildChecked(item, value);
-                item.IsSelected = value;
+                if (item.IsSearchMatch)
+                {
+                    SetChildChecked(item, value);
+                    item.IsSelected = value;
+                }
             }
         }
     }
@@ -41,7 +44,7 @@ public class InstrumentsTreeItemViewModel : DependencyObject
     {
         if (node.Parent is null) return;
 
-        if (isChecked is null) // short curcuit return to avoid unnessecary checkings
+        if (isChecked is null)
         {
             node.Parent.IsSelected = null;
         }
@@ -52,7 +55,7 @@ public class InstrumentsTreeItemViewModel : DependencyObject
                 isChecked = null;
                 node.Parent.IsSelected = isChecked;
             }
-            else // last child has been equaled to others
+            else
             {
                 node.Parent.IsSelected = isChecked;
             }

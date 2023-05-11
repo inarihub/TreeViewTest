@@ -1,31 +1,50 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Windows;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace TreeViewTest.Models.Instruments;
 
-public class InstrumentNode : DependencyObject, IInstrument
+public class InstrumentNode : IInstrument, ITreeSearchable, INotifyPropertyChanged
 {
-    #region interface implementation
+    #region interfaces implementation
     public string Name { get; init; }
     public int Hits { get; set; }
+
+    private bool _isSearchMatch;
+    public bool IsSearchMatch
+    {
+        get => _isSearchMatch;
+        set
+        {
+            _isSearchMatch = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
     #endregion
 
     public string Key { get; init; }
     public int Level { get; init; }
     public List<InstrumentNode> Items { get; init; }
-    public InstrumentNode? Parent { get; internal set; }
+    public InstrumentNode? Parent { get; set; }
     public string Path { get; init; }
-    public bool HasChildren { get; internal set; }
+    public bool HasChildren { get; set; }
 
+    public bool? _isSelected;
     public bool? IsSelected
     {
-        get { return (bool?)GetValue(IsSelectedProperty); }
-        set { SetValue(IsSelectedProperty, value); }
+        get => _isSelected;
+        set
+        {
+            _isSelected = value;
+            OnPropertyChanged();
+        }
     }
-
-    public static readonly DependencyProperty IsSelectedProperty =
-        DependencyProperty.Register("IsSelected", typeof(bool?), typeof(InstrumentNode), new PropertyMetadata(false));
 
     public InstrumentNode()
     {
@@ -36,5 +55,7 @@ public class InstrumentNode : DependencyObject, IInstrument
         Path = string.Empty;
         HasChildren = false;
         Items = new List<InstrumentNode>();
+        IsSelected = false;
+        IsSearchMatch = true;
     }
 }

@@ -5,8 +5,6 @@ namespace TreeViewTest.Controls
 {
     public class InstrumentsCheckBox : CheckBox
     {
-
-
         public bool PartialToChecked
         {
             get { return (bool)GetValue(PartialToCheckedProperty); }

@@ -1,4 +1,4 @@
-﻿<Page x:Class="TreeViewTest.Views.InstrumentsMenuView"
+﻿<Page x:Name="instrumentsView" x:Class="TreeViewTest.Views.InstrumentsMenuView"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -8,38 +8,61 @@
       xmlns:local="clr-namespace:TreeViewTest.Views"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
-      Title="InstrumentsMenu">
+      Title="InstrumentsMenu" Initialized="InitializedHandler">
     <Page.Resources>
+        <Style TargetType="TreeViewItem">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSearchMatch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Value="False">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
         <Style TargetType="Button">
             <Setter Property="Width" Value="100"/>
             <Setter Property="Height" Value="30"/>
             <Setter Property="Margin" Value="10"/>
             <Setter Property="HorizontalAlignment" Value="Right"/>
         </Style>
+        <Style x:Key="Hint" TargetType="StackPanel">
+            <Setter Property="IsHitTestVisible" Value="False"/>
+            <Setter Property="Visibility" Value="Hidden"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsInitializing, UpdateSourceTrigger=PropertyChanged}" Value="True">
+                    <Setter Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Page.Resources>
     <Page.DataContext>
         <vm:InstrumentsMenuViewModel/>
     </Page.DataContext>
-    <Grid>
+    <Grid Margin="10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
+            <ColumnDefinition Width="20"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="0.5*"/>
             <RowDefinition Height="8*"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <uc:InstrumentsTreeControl x:Name="treeView" Margin="10"
-                                   InstrumentsRoot="{Binding InstrumentsRootNode, UpdateSourceTrigger=PropertyChanged}"/>
-        <StackPanel Orientation="Horizontal" Grid.Row="1"
-                    HorizontalAlignment="Right">
-            <Button Content="Select all" Command="{Binding SelectAllCommand}"/>
-            <Button Content="Unselect all" Command="{Binding UnselectAllCommand}"/>
+        <StackPanel Orientation="Vertical" VerticalAlignment="Top" HorizontalAlignment="Left"
+                    Style="{StaticResource Hint}">
+            <TextBlock x:Name="loadingText" FontWeight="Light" FontSize="16"
+                   Text="Initializing... (3 sec)"/>
         </StackPanel>
-        <ListView Grid.Column="1" Margin="10"
-                  ItemsSource="{Binding SelectedCodes, UpdateSourceTrigger=PropertyChanged}"
+        <uc:InstrumentsTreeControl x:Name="treeView" Grid.Row="1"
+                                   CollectionNodeView="{Binding InstrumentRootNode.Items, UpdateSourceTrigger=PropertyChanged}"/>
+        <StackPanel Orientation="Horizontal" Grid.Row="2"
+                    HorizontalAlignment="Right">
+            <Button Content="Search" Command="{Binding SearchCommand}"/>
+            <Button Content="Reset" Command="{Binding ResetCommand}"/>
+        </StackPanel>
+        <ListView Grid.Column="2" Grid.Row="1"
+                  ItemsSource="{Binding SelectedKeys, UpdateSourceTrigger=PropertyChanged}"
                   VirtualizingStackPanel.IsVirtualizing="True"/>
-        <Button Content="Get codes" Grid.Column="1" Grid.Row="1"
-                Command="{Binding GetCodesCommand}"/>
+        <Button Content="Get codes" Grid.Column="2" Grid.Row="2"
+                Command="{Binding GetKeysCommand}"/>
     </Grid>
 </Page>
