@@ -36,7 +36,6 @@ public class InstrumentNodeBuilder
     {
         var parent = FindParent(rootNode, result.Key);
         if (parent is null) return;
-        parent.HasChildren = true;
         result.Parent = parent;
         parent.Items.Add(result);
     }

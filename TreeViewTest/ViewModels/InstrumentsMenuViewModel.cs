@@ -10,13 +10,14 @@ namespace TreeViewTest.ViewModels;
 
 public partial class InstrumentsMenuViewModel : BaseViewModel
 {
+    const int SIM_DELAY = 3000; // ms
     InstrumentsProviderService _instrumentProvider;
 
     public IRelayCommand GetKeysCommand { get; set; }
     public IRelayCommand SearchCommand { get; set; }
     public IRelayCommand ResetCommand { get; set; }
 
-    public event EventHandler<TreeChangedEventArgs> OnTreeStateChanged;
+    public event EventHandler<RequestEventArgs> OnRequestStateChanged;
 
     private bool _isInitializing;
     public bool IsInitializing
@@ -58,7 +59,7 @@ public partial class InstrumentsMenuViewModel : BaseViewModel
     {
         _instrumentProvider = new();
         _selectedKeys = new();
-        OnTreeStateChanged += TreeStateChangedHandler;
+        OnRequestStateChanged += RequestStateChangedHandler;
         GetKeysCommand = new AsyncRelayCommand(GetKeys, CanExecuteButton);
         SearchCommand = new AsyncRelayCommand(SearchBySelected, CanExecuteButton);
         ResetCommand = new AsyncRelayCommand(ResetNodesView, CanExecuteButton);
@@ -66,14 +67,14 @@ public partial class InstrumentsMenuViewModel : BaseViewModel
 
     public async Task BeginInitializeRootNode()
     {
-        OnTreeStateChanged?.Invoke(this, new TreeChangedEventArgs(InstrumentRootNode, TreeState.InitializationStarted));
+        OnRequestStateChanged?.Invoke(this, new RequestEventArgs(InstrumentRootNode, RequestState.RequestSent));
 
-        using (var instrumentsStream = await _instrumentProvider.GetInstrumentsAsync())
+        using (var instrumentsStream = await _instrumentProvider.GetInstrumentsAsync(SIM_DELAY))
         {
             InstrumentRootNode = await Task.Run(() => InstrumentNodeBuilder.PopulateNodeAsync(instrumentsStream));
         }
 
-        OnTreeStateChanged?.Invoke(this, new TreeChangedEventArgs(InstrumentRootNode, TreeState.InitializationEnded, true));
+        OnRequestStateChanged?.Invoke(this, new RequestEventArgs(InstrumentRootNode, RequestState.RequestReceived, true));
     }
 
     #region Reset methods
@@ -99,7 +100,7 @@ public partial class InstrumentsMenuViewModel : BaseViewModel
                 } 
             }
 
-            if (instrument.HasChildren)
+            if (instrument.Items.Count > 0)
                 ResetSearching(instrument.Items);
         }
     }
@@ -109,17 +110,17 @@ public partial class InstrumentsMenuViewModel : BaseViewModel
 
     private async Task GetKeys()
     {
-        OnTreeStateChanged?.Invoke(InstrumentRootNode, new TreeChangedEventArgs(InstrumentRootNode, TreeState.InitializationStarted));
+        OnRequestStateChanged?.Invoke(InstrumentRootNode, new RequestEventArgs(InstrumentRootNode, RequestState.RequestSent));
 
         if (InstrumentRootNode is not null)
         {
             var newKeys = new List<string>();
-            await Task.Delay(3000); // simulation
+            await Task.Delay(SIM_DELAY); // simulation
             await Task.Run(() => FindSelected(InstrumentRootNode.Items, newKeys));
             SelectedKeys = newKeys;
         }
         
-        OnTreeStateChanged?.Invoke(InstrumentRootNode, new TreeChangedEventArgs(InstrumentRootNode, TreeState.InitializationEnded));
+        OnRequestStateChanged?.Invoke(InstrumentRootNode, new RequestEventArgs(InstrumentRootNode, RequestState.RequestReceived));
     }
 
     private void FindSelected(List<InstrumentNode> instruments, List<string> keys)
@@ -132,11 +133,11 @@ public partial class InstrumentsMenuViewModel : BaseViewModel
             }
             else if (instrument.IsSelected.Value is true)
             {
-                if (instrument.HasChildren)
+                if (instrument.Items.Count > 0)
                 {
                     FindSelected(instrument.Items, keys);
                 }
-                else if (!instrument.HasChildren)
+                else
                 {
                     keys.Add(instrument.Key);
                 }
@@ -149,11 +150,11 @@ public partial class InstrumentsMenuViewModel : BaseViewModel
 
     private async Task SearchBySelected()
     {
-        OnTreeStateChanged?.Invoke(this, new TreeChangedEventArgs(InstrumentRootNode, TreeState.InitializationStarted));
+        OnRequestStateChanged?.Invoke(this, new RequestEventArgs(InstrumentRootNode, RequestState.RequestSent));
         if (InstrumentRootNode is null) return;
-        await Task.Delay(3000);
+        await Task.Delay(SIM_DELAY);
         await Task.Run(() => FilterItemsView(InstrumentRootNode, IsMatched));
-        OnTreeStateChanged?.Invoke(this, new TreeChangedEventArgs(InstrumentRootNode, TreeState.InitializationEnded, true));
+        OnRequestStateChanged?.Invoke(this, new RequestEventArgs(InstrumentRootNode, RequestState.RequestReceived, true));
     }
 
     static bool IsMatched(InstrumentNode node)
@@ -164,12 +165,10 @@ public partial class InstrumentsMenuViewModel : BaseViewModel
         {
             if (isSelected) return true;
 
-            if (!isSelected && node.Parent is InstrumentNode parent && parent.Items.IndexOf(node) < 3 && parent.IsSelected is not null)
-                return true;
-            else
-                return false;
+            return node.Parent is InstrumentNode parent && parent.Items.IndexOf(node) < 3 && parent.IsSelected is not null;
         }
-        else return true;
+
+        return true;
     }
 
     /// <summary>
@@ -191,19 +190,19 @@ public partial class InstrumentsMenuViewModel : BaseViewModel
             else if (item.IsSelected is bool value && value is false)
             {
                 isBecameSelected = false;
-            } // little helper while we has "simulation rules"
+            } // little helper while we have "simulation rules"
 
-            if (item.HasChildren)
+            if (item.Items.Count > 0)
                 FilterItemsView(item, predicate);
         }
 
-        if (isBecameSelected) instrument.IsSelected = true;
+        if (isBecameSelected && instrument.Items.Count > 0) instrument.IsSelected = true;
     }
     #endregion
 
-    private void TreeStateChangedHandler(object? sender, TreeChangedEventArgs e)
+    private void RequestStateChangedHandler(object? sender, RequestEventArgs e)
     {
-        IsInitializing = e.State == TreeState.InitializationStarted;
+        IsInitializing = e.State == RequestState.RequestSent;
     }
 
     private bool CanExecuteButton()

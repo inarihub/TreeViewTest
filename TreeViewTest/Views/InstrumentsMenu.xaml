@@ -49,8 +49,8 @@
         </Grid.RowDefinitions>
         <StackPanel Orientation="Vertical" VerticalAlignment="Top" HorizontalAlignment="Left"
                     Style="{StaticResource Hint}">
-            <TextBlock x:Name="loadingText" FontWeight="Light" FontSize="16"
-                   Text="Initializing... (3 sec)"/>
+            <TextBlock x:Name="loadingText" FontWeight="SemiBold"
+                       FontSize="14" Text="Initializing..."/>
         </StackPanel>
         <uc:InstrumentsTreeControl x:Name="treeView" Grid.Row="1"
                                    CollectionNodeView="{Binding InstrumentRootNode.Items, UpdateSourceTrigger=PropertyChanged}"/>
